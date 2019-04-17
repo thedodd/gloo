@@ -27,9 +27,9 @@ use crate::{
 /// This type encapsulates all of the low-level logic related to interfacing with the wasm-bindgen
 /// and web-sys components needed for building new WebSocket instances, handling reconnect logic
 /// and the like.
-pub struct WebSocketCore {
-    builder: Rc<WebSocketBuilder>,
-    ws: Rc<RefCell<web_sys::WebSocket>>,
+pub(crate) struct WebSocketCore {
+    pub builder: Rc<WebSocketBuilder>,
+    pub ws: Rc<RefCell<web_sys::WebSocket>>,
 }
 
 impl WebSocketCore {
@@ -115,9 +115,6 @@ impl WebSocketCore {
 
     /// Build the callback which is used to handle `error` events.
     fn build_onerror(builder: Rc<WebSocketBuilder>) -> Option<Closure<dyn FnMut(Event) + 'static>> {
-        // TODO: if we decide to provide a Gloo interface for wrapping JsValue errors, we should
-        // update this interface to take the new error type, instead of raw JS events.
-
         // Unpack the user supplied value. If none, we have nothing to do.
         let cb = match builder.onerror.clone() {
             None => return None,

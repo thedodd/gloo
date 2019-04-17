@@ -2,7 +2,6 @@
 
 use std::{
     cell::RefCell,
-    fmt,
     rc::Rc,
     time::Duration,
 };
@@ -62,6 +61,7 @@ impl From<u16> for ReadyState {
 /// internal state of the reconnect config will be updated as needed. Once a connection has been
 /// successfully re-established, the `reset` method should be called, which will reset the internal
 /// state of the instance.
+#[derive(Debug)]
 pub struct ReconnectConfig {
     is_reconnecting: bool,
     backoff: ExponentialBackoff,
@@ -129,26 +129,10 @@ impl ReconnectConfig {
     }
 }
 
-// TODO: just derive debug once https://github.com/ihrwein/backoff/pull/6 lands.
-impl fmt::Debug for ReconnectConfig {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ReconnectConfig {{ is_reconnecting: {}, backoff: ExponentialBackoff: {{ current_interval: {:?}, initial_interval: {:?}, randomization_factor: {:?}, multiplier: {:?}, max_interval: {:?}, start_time: {:?}, max_elapsed_time: {:?} }} }}",
-            self.is_reconnecting,
-            self.backoff.current_interval,
-            self.backoff.initial_interval,
-            self.backoff.randomization_factor,
-            self.backoff.multiplier,
-            self.backoff.max_interval,
-            self.backoff.start_time,
-            self.backoff.max_elapsed_time,
-        )
-    }
-}
-
 impl Default for ReconnectConfig {
     fn default() -> Self {
         let mut backoff = ExponentialBackoff::default();
-        backoff.max_interval = Duration::from_secs(60); // One min max interval.
+        backoff.max_interval = Duration::from_secs(60); // One minute max interval.
         backoff.multiplier = 1.5; // Increase by 50% each interval.
         backoff.max_elapsed_time = None; // Never allow max_elapsed_time.
         let retry_closure = Rc::new(RefCell::new(None));

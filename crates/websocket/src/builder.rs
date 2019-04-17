@@ -22,28 +22,28 @@ use crate::{
 /// A type used for building a new WebSocket instance.
 pub struct WebSocketBuilder {
     /// User supplied URL for the WebSocket connection.
-    pub url: Rc<Cow<'static, str>>,
+    pub(crate) url: Rc<Cow<'static, str>>,
 
     /// User supplied subprotocols for the WebSocket to use.
-    pub protocols: Option<Rc<Vec<Cow<'static, str>>>>,
+    pub(crate) protocols: Option<Rc<Vec<Cow<'static, str>>>>,
 
     /// User supplied `message` handler.
-    pub onmessage: Option<Rc<RefCell<dyn FnMut(WsMessage)>>>,
+    pub(crate) onmessage: Option<Rc<RefCell<dyn FnMut(WsMessage)>>>,
 
     /// User supplied `open` handler.
-    pub onopen: Option<Rc<RefCell<dyn FnMut(Event)>>>,
+    pub(crate) onopen: Option<Rc<RefCell<dyn FnMut(Event)>>>,
 
     /// User supplied `error` handler.
-    pub onerror: Option<Rc<RefCell<dyn FnMut(Event)>>>,
+    pub(crate) onerror: Option<Rc<RefCell<dyn FnMut(Event)>>>,
 
     /// User supplied `close` handler.
-    pub onclose: Option<Rc<RefCell<dyn FnMut(Event)>>>,
+    pub(crate) onclose: Option<Rc<RefCell<dyn FnMut(Event)>>>,
 
     /// Reconnection config used for driving the exponential backoff reconnect system.
-    pub reconnect: Option<Rc<RefCell<ReconnectConfig>>>,
+    pub(crate) reconnect: Option<Rc<RefCell<ReconnectConfig>>>,
 
     /// A storage location for EventHandlers.
-    pub cb_store: Rc<RefCell<Vec<Option<Closure<dyn FnMut(Event) + 'static>>>>>,
+    pub(crate) cb_store: Rc<RefCell<Vec<Option<Closure<dyn FnMut(Event) + 'static>>>>>,
 }
 
 impl WebSocketBuilder {
@@ -68,14 +68,6 @@ impl WebSocketBuilder {
     /// an error will only be returned if "The port to which the connection is being attempted is
     /// being blocked".
     pub fn build(self) -> Result<WebSocket, JsValue> {
-        // TODO: I feel like it may be a good idea for Gloo to offer a robust JsValue error
-        // to rust error crate, so that users don't have to deal with JsValue errors.
-
-        // TODO: Parse the given URL. If we were given only a URI path, then build a valid URL.
-        // let full_url = self.parse_url();
-
-        // TODO: need to implement a `close` method which will cleanly close down an instance normally configured to reconnect.
-
         // Build the initial WebSocket instance.
         let ws = Rc::new(RefCell::new(
             WebSocketCore::build_new_websocket(&self.url, &self.protocols)?
