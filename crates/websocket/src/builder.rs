@@ -44,6 +44,9 @@ pub struct WebSocketBuilder {
 
     /// A storage location for EventHandlers.
     pub(crate) cb_store: Rc<RefCell<Vec<Option<Closure<dyn FnMut(Event) + 'static>>>>>,
+
+    /// A switch to supppress reconnect behavior for when the WebSocket is closing.
+    pub(crate) is_closing: Rc<RefCell<bool>>,
 }
 
 impl WebSocketBuilder {
@@ -58,6 +61,7 @@ impl WebSocketBuilder {
             onclose: None,
             reconnect: Some(Rc::new(RefCell::new(ReconnectConfig::default()))),
             cb_store: Rc::new(RefCell::new(vec![])),
+            is_closing: Rc::new(RefCell::new(false)),
         }
     }
 

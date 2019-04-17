@@ -60,6 +60,19 @@ impl WebSocketCore {
         Self{builder, ws}
     }
 
+    /// Close the WebSocket connection and suppress reconnect behavior as needed.
+    pub(crate) fn close(&self, code: u16, reason: Option<String>) -> Result<(), JsValue> {
+        *self.builder.is_closing.borrow_mut() = true;
+        let ws = self.ws.borrow();
+        match reason {
+            None => ws.close_with_code(code),
+            Some(reason) => ws.close_with_code_and_reason(code, reason.as_str()),
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Private Interface /////////////////////////////////////////////////////
+
     /// Build the callback which is used to handle `message` events.
     fn build_onmessage(builder: Rc<WebSocketBuilder>) -> Option<Closure<dyn FnMut(Event) + 'static>> {
         // Unpack the user supplied value. If none, we have nothing to do.
@@ -142,19 +155,21 @@ impl WebSocketCore {
         Some(Closure::wrap(Box::new(move |event: Event| {
             // If this instance is configured to reconnect, and a reconnect is now needed, setup
             // retry callbacks via backoff config and timeout callbacks.
-            if let Some(cfg) = builder.reconnect.clone() {
-                // Gather items needed for scheduling a retry callback.
-                let next_backoff = cfg.borrow_mut().next_backoff();
-                let retry_cb = Self::build_retry_closure(builder.clone(), ws.clone());
+            if !*builder.is_closing.borrow() {
+                if let Some(cfg) = builder.reconnect.clone() {
+                    // Gather items needed for scheduling a retry callback.
+                    let next_backoff = cfg.borrow_mut().next_backoff();
+                    let retry_cb = Self::build_retry_closure(builder.clone(), ws.clone());
 
-                // Schedule the retry callback.
-                Self::schedule_reconnect(
-                    retry_cb.as_ref().unchecked_ref(),
-                    next_backoff.as_secs() as i32, // u64 -> i32 will be truncated if larger than i32.
-                );
+                    // Schedule the retry callback.
+                    Self::schedule_reconnect(
+                        retry_cb.as_ref().unchecked_ref(),
+                        next_backoff.as_secs() as i32, // u64 -> i32 will be truncated if larger than i32.
+                    );
 
-                // Store our retry callback to ensure it is not prematurely dropped.
-                cfg.borrow_mut().set_retry_cb(retry_cb);
+                    // Store our retry callback to ensure it is not prematurely dropped.
+                    cfg.borrow_mut().set_retry_cb(retry_cb);
+                }
             }
 
             // Pass event to user's callback if needed.
@@ -168,6 +183,12 @@ impl WebSocketCore {
     /// Build a retry closure to be executed at some point in the future.
     fn build_retry_closure(builder: Rc<WebSocketBuilder>, ws: Rc<RefCell<web_sys::WebSocket>>) -> Closure<dyn FnMut() + 'static> {
         Closure::wrap(Box::new(move || {
+            // If the WebSocket was manually closed by a user before this callback was invoked,
+            // the suppress the reconnect behavior.
+            if *builder.is_closing.borrow() {
+                return;
+            }
+
             // When this retry closure is invoked, build a new WebSocket instance.
             let new_ws = match Self::build_new_websocket(&builder.url, &builder.protocols) {
                 Ok(new_ws) => new_ws,
