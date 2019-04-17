@@ -44,6 +44,14 @@ impl WebSocket {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
     ///
+    /// After this method has been called, the instance is no longer good for much. It would be
+    /// logical to drop the instance after calling this method. This type also has a custom
+    /// `Drop` implementation which will call this method with default values when the instance
+    /// is dropped. Therefore, this method is primarily intended for use when a custom code or
+    /// reason needs to be used when closing the connection.
+    ///
+    /// Any successive calls to this method will be a no-op.
+    ///
     /// #### code
     /// If a code is provided, the connection will be closed with the given code. If this
     /// parameter is not specified, a default value of 1005 is assumed. An error will
@@ -54,7 +62,7 @@ impl WebSocket {
     /// If a reason is supplied, it will be used as the explanation for why the connection was
     /// closed. The string must be no longer than `123` bytes, else an exception will be thrown
     /// from the underlying platform.
-    pub fn close(self, code: Option<u16>, reason: Option<String>) -> Result<(), JsValue> {
+    pub fn close(&mut self, code: Option<u16>, reason: Option<String>) -> Result<(), JsValue> {
         self.0.close(code.unwrap_or(1005u16), reason)
     }
 
@@ -90,5 +98,12 @@ impl WebSocket {
     /// The absolute URL which this WebSocket instance is connected to.
     pub fn url(&self) -> String {
         self.0.ws.borrow().url()
+    }
+}
+
+impl Drop for WebSocket {
+    fn drop(&mut self) {
+        // Ensure the underlying WebSocket instance is dropped.
+        let _ = self.close(None, None);
     }
 }
