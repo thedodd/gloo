@@ -18,7 +18,7 @@ use wasm_bindgen::{
 use web_sys::{self, BinaryType, Event, MessageEvent};
 
 use crate::{
-    builder::WebSocketBuilder,
+    cb::builder::WebSocketBuilder,
     common::WsMessage,
 };
 

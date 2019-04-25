@@ -6,10 +6,8 @@
 //!
 //! The `common` module provides types and functionality common to both API types.
 
-mod builder;
 pub mod cb;
 pub mod common;
-mod core;
 pub mod fut;
 
 pub use crate::{

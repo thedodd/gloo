@@ -1,11 +1,16 @@
+mod builder;
+mod core;
+
 use std::borrow::Cow;
 
 use wasm_bindgen::JsValue;
 
 use crate::{
-    builder::WebSocketBuilder,
+    cb::{
+        builder::WebSocketBuilder,
+        core::WebSocketCore,
+    },
     common::{ReadyState, WsMessage},
-    core::WebSocketCore,
 };
 
 /// A WebSocket abstraction providing a standard callbacks interface.
@@ -25,6 +30,12 @@ impl WebSocket {
     /// various events coming from the WebSocket.
     ///
     /// The builder's `build()` method must be called in order to begin using the WebSocket.
+    ///
+    /// ### url
+    /// The given value for `url` must be a valid URL pointing to the location the WebSocket
+    /// connection is to be made, or it must be a URL path. If only a path is provided, then the
+    /// browser's current origin will be used as the base and the supplied path will be appended
+    /// to it.
     pub fn connect<U: Into<Cow<'static, str>>>(url: U) -> WebSocketBuilder {
         WebSocketBuilder::new(url.into())
     }

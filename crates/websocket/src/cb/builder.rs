@@ -8,15 +8,17 @@ use wasm_bindgen::{
     JsValue,
     closure::Closure,
 };
-use web_sys::{self, Event};
+use web_sys::{self, Event, Url};
 
 use crate::{
-    cb::WebSocket,
+    cb::{
+        WebSocket,
+        core::WebSocketCore,
+    },
     common::{
         ReconnectConfig,
         WsMessage,
     },
-    core::WebSocketCore,
 };
 
 /// A type used for building a new WebSocket instance.
