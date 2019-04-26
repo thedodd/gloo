@@ -8,7 +8,7 @@ use wasm_bindgen::{
     JsValue,
     closure::Closure,
 };
-use web_sys::{self, Event, Url};
+use web_sys::{self, Event};
 
 use crate::{
     cb::{

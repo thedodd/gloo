@@ -12,7 +12,7 @@ use js_sys::{
     Uint8Array,
 };
 use wasm_bindgen::{
-    JsCast, JsValue,
+    JsCast, JsValue, UnwrapThrowExt,
     closure::Closure,
 };
 use web_sys::{self, BinaryType, Event, MessageEvent};
@@ -254,9 +254,10 @@ impl WebSocketCore {
 
     /// Schedule the given function to be executed at the given timeout.
     fn schedule_reconnect(func: &Function, timeout: i32) {
+        // TODO: cut this over to use `gloo_timers`.
         web_sys::window()
-            .unwrap() // Access to the window should normally not be problematic.
+            .expect_throw("Expected to be able to access Window object.")
             .set_timeout_with_callback_and_timeout_and_arguments_0(func, timeout)
-            .unwrap(); // This should be safe under normal circumstances.
+            .expect_throw("Expected to be able to set a timeout.");
     }
 }
