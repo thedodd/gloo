@@ -1,0 +1,17 @@
+[package]
+name = "gloo-websocket"
+version = "0.1.0"
+authors = ["Rust and WebAssembly Working Group"]
+edition = "2018"
+
+[dependencies]
+# TODO: use upstream crate once <> lands.
+backoff = { git="https://github.com/thedodd/backoff", rev="95676e51637b91c3e3ef4abfb8d4df3c1ceb1b55", features=["wasm-bindgen"] }
+futures = "0.1"
+gloo-events = { version = "0.1.0", path = "../events" }
+js-sys = "0.3.17"
+wasm-bindgen = "0.2.40"
+
+[dependencies.web-sys]
+version = "0.3.17"
+features=["BinaryType", "Event", "Location", "MessageEvent", "WebSocket", "Window"]

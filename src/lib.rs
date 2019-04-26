@@ -7,3 +7,4 @@
 pub use gloo_console_timer as console_timer;
 pub use gloo_events as events;
 pub use gloo_timers as timers;
+pub use gloo_websocket as websocket;
